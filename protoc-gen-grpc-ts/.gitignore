@@ -1,0 +1,48 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# Generated binaries
+protoc-gen-grpc-react-native
+grpc-react-native-plugin
+
+# Generated output directories
+neofs-output/
+neofs-output-new/
+testoutput/
+
+# Dependencies
+vendor/
+node_modules/
+
+# Go test cache
+*.test
+go.test.sum
+coverage.out
+coverage.html
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local

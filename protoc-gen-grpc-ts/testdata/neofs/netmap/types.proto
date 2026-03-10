@@ -1,0 +1,340 @@
+syntax = "proto3";
+
+package neo.fs.v2.netmap;
+
+import "refs/types.proto";
+
+option csharp_namespace = "Neo.FileStorage.API.Netmap";
+option go_package = "github.com/nspcc-dev/neofs-sdk-go/proto/netmap";
+
+// Operations on filters
+enum Operation {
+  // No Operation defined
+  OPERATION_UNSPECIFIED = 0;
+
+  // Equal
+  EQ = 1;
+
+  // Not Equal
+  NE = 2;
+
+  // Greater then
+  GT = 3;
+
+  // Greater or equal
+  GE = 4;
+
+  // Less then
+  LT = 5;
+
+  // Less or equal
+  LE = 6;
+
+  // Logical OR
+  OR = 7;
+
+  // Logical AND
+  AND = 8;
+}
+
+// Selector modifier shows how the node set will be formed. By default selector
+// just groups nodes into a bucket by attribute, selecting nodes only by their
+// hash distance.
+enum Clause {
+  // No modifier defined. Nodes will be selected from the bucket randomly
+  CLAUSE_UNSPECIFIED = 0;
+
+  // SAME will select only nodes having the same value of bucket attribute
+  SAME = 1;
+
+  // DISTINCT will select nodes having different values of bucket attribute
+  DISTINCT = 2;
+}
+
+// This filter will return the subset of nodes from `NetworkMap` or another filter's
+// results that will satisfy filter's conditions.
+message Filter {
+  // Name of the filter or a reference to a named filter. '*' means
+  // application to the whole unfiltered NetworkMap. At top level it's used as a
+  // filter name. At lower levels it's considered to be a reference to another
+  // named filter
+  string name = 1 [json_name = "name"];
+
+  // Key to filter
+  string key = 2 [json_name = "key"];
+
+  // Filtering operation
+  Operation op = 3 [json_name = "op"];
+
+  // Value to match
+  string value = 4 [json_name = "value"];
+
+  // List of inner filters. Top level operation will be applied to the whole
+  // list.
+  repeated Filter filters = 5 [json_name = "filters"];
+}
+
+// Selector chooses a number of nodes from the bucket taking the nearest nodes
+// to the provided `ContainerID` by hash distance.
+message Selector {
+  // Selector name to reference in object placement section
+  string name = 1 [json_name = "name"];
+
+  // How many nodes to select from the bucket
+  uint32 count = 2 [json_name = "count"];
+
+  // Selector modifier showing how to form a bucket
+  Clause clause = 3 [json_name = "clause"];
+
+  // Bucket attribute to select from
+  string attribute = 4 [json_name = "attribute"];
+
+  // Filter reference to select from
+  string filter = 5 [json_name = "filter"];
+}
+
+// Number of object replicas in a set of nodes from the defined selector. If no
+// selector set, the root bucket containing all possible nodes will be used by
+// default.
+message Replica {
+  // How many object replicas to put. Limited to 8.
+  uint32 count = 1 [json_name = "count"];
+
+  // Named selector bucket to put replicas
+  string selector = 2 [json_name = "selector"];
+}
+
+// Set of rules to select a subset of nodes from `NetworkMap` able to store
+// container's objects. The format is simple enough to transpile from different
+// storage policy definition languages.
+message PlacementPolicy {
+  // Rules to set number of object replicas and place each one into a named
+  // bucket. Limited to 256 items.
+  repeated Replica replicas = 1 [json_name = "replicas"];
+
+  // Container backup factor (CBF) controls how deep NeoFS will search for
+  // alternative nodes to include into container's nodes subset. In total,
+  // the number of container nodes is Selector (used by Replica) count
+  // times CBF. This number is limited to 64 per-Replica and 512 overall.
+  uint32 container_backup_factor = 2 [json_name = "containerBackupFactor"];
+
+  // Set of Selectors to form the container's nodes subset
+  repeated Selector selectors = 3 [json_name = "selectors"];
+
+  // List of named filters to reference in selectors
+  repeated Filter filters = 4 [json_name = "filters"];
+
+  // DEPRECATED. Was used for subnetwork ID to select nodes from, currently
+  // ignored.
+  refs.SubnetID subnet_id = 5 [
+    json_name = "subnetId",
+    deprecated = true
+  ];
+}
+
+// NeoFS node description
+message NodeInfo {
+  // Public key of the NeoFS node in a binary format
+  bytes public_key = 1 [json_name = "publicKey"];
+
+  // Ways to connect to a node
+  repeated string addresses = 2 [json_name = "addresses"];
+
+  // Administrator-defined Attributes of the NeoFS Storage Node.
+  //
+  // `Attribute` is a Key-Value metadata pair. Key name must be a valid UTF-8
+  // string (without zero bytes that are forbidden). Value can't be empty.
+  //
+  // Attributes can be constructed into a chain of attributes: any attribute can
+  // have a parent attribute and a child attribute (except the first and the last
+  // one). A string representation of the chain of attributes in NeoFS Storage
+  // Node configuration uses ":" and "/" symbols, e.g.:
+  //
+  //        `NEOFS_NODE_ATTRIBUTE_1=key1:val1/key2:val2`
+  //
+  // Therefore the string attribute representation in the Node configuration must
+  // use "\:", "\/" and "\\" escaped symbols if any of them appears in an attribute's
+  // key or value.
+  //
+  // Node's attributes are mostly used during Storage Policy evaluation to
+  // calculate object's placement and find a set of nodes satisfying policy
+  // requirements. There are some "well-known" node attributes common to all the
+  // Storage Nodes in the network and used implicitly with default values if not
+  // explicitly set:
+  //
+  // * Capacity \
+  //   Total available disk space in Gigabytes.
+  // * Price \
+  //   Price in GAS tokens for storing one GB of data during one Epoch. In node
+  //   attributes it's a string presenting floating point number with comma or
+  //   point delimiter for decimal part. In the Network Map it will be saved as
+  //   64-bit unsigned integer representing number of minimal token fractions.
+  // * __NEOFS__SUBNET_%s \
+  //   DEPRECATED. Defined if the node is included in the `%s` subnetwork
+  //   or not. Currently ignored.
+  // * UN-LOCODE \
+  //   Node's geographic location in
+  //   [UN/LOCODE](https://www.unece.org/cefact/codesfortrade/codes_index.html)
+  //   format approximated to the nearest point defined in the standard.
+  // * CountryCode \
+  //   Country code in
+  //   [ISO 3166-1_alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+  //   format. Calculated automatically from `UN-LOCODE` attribute.
+  // * Country \
+  //   Country short name in English, as defined in
+  //   [ISO-3166](https://www.iso.org/obp/ui/#search). Calculated automatically
+  //   from `UN-LOCODE` attribute.
+  // * Location \
+  //   Place names are given, whenever possible, in their national language
+  //   versions as expressed in the Roman alphabet using the 26 characters of
+  //   the character set adopted for international trade data interchange,
+  //   written without diacritics . Calculated automatically from `UN-LOCODE`
+  //   attribute.
+  // * SubDivCode \
+  //   Country's administrative subdivision where node is located. Calculated
+  //   automatically from `UN-LOCODE` attribute based on `SubDiv` field.
+  //   Presented in [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2)
+  //   format.
+  // * SubDiv \
+  //   Country's administrative subdivision name, as defined in
+  //   [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2). Calculated
+  //   automatically from `UN-LOCODE` attribute.
+  // * Continent \
+  //   Node's continent name according to the [Seven-Continent model]
+  //   (https://en.wikipedia.org/wiki/Continent#Number). Calculated
+  //   automatically from `UN-LOCODE` attribute.
+  // * ExternalAddr
+  //   Node's preferred way for communications with external clients.
+  //   Clients SHOULD use these addresses if possible.
+  //   Must contain a comma-separated list of multi-addresses.
+  //   DEPRECATED. Use 'addresses' field instead.
+  // * Version
+  //   Node implementation's version in a free string form.
+  // * VerifiedNodesDomain
+  //   Confirmation of admission to a group of storage nodes.
+  //   The value is the domain name registered in the NeoFS NNS. If attribute
+  //   is specified, the storage node requesting entry into the NeoFS network
+  //   map with this attribute must be included in the access list located on
+  //   the specified domain. The access list is represented by a set of TXT
+  //   records: Neo addresses resolved from public keys. To be admitted to the
+  //   network, Neo address of the node's public key declared in 'public_key'
+  //   field must be present in domain records. Otherwise, registration will be
+  //   denied.
+  //   Value must be a valid NeoFS NNS domain name. Note that if this attribute
+  //   is absent, this check is not carried out.
+  //
+  // For detailed description of each well-known attribute please see the
+  // corresponding section in NeoFS Technical Specification.
+  message Attribute {
+    // Key of the node attribute
+    string key = 1 [json_name = "key"];
+
+    // Value of the node attribute
+    string value = 2 [json_name = "value"];
+
+    // Parent keys, if any. For example for `City` it could be `Region` and
+    // `Country`.
+    repeated string parents = 3 [json_name = "parents"];
+  }
+  // Carries list of the NeoFS node attributes in a key-value form. Key name
+  // must be a node-unique valid UTF-8 string (without zero bytes). Value can't
+  // be empty. NodeInfo structures with duplicated attribute names or
+  // attributes with empty values will be considered invalid.
+  repeated Attribute attributes = 3 [json_name = "attributes"];
+
+  // Represents the enumeration of various states of the NeoFS node.
+  enum State {
+    // Unknown state
+    UNSPECIFIED = 0;
+
+    // Active state in the network
+    ONLINE = 1;
+
+    // Network unavailable state
+    OFFLINE = 2;
+
+    // Maintenance state
+    MAINTENANCE = 3;
+  }
+
+  // Carries state of the NeoFS node
+  State state = 4 [json_name = "state"];
+}
+
+// Network map structure
+message Netmap {
+  // Network map revision number.
+  uint64 epoch = 1 [json_name = "epoch"];
+
+  // Nodes presented in network.
+  repeated NodeInfo nodes = 2 [json_name = "nodes"];
+}
+
+// NeoFS network configuration
+message NetworkConfig {
+  // Single configuration parameter. Key MUST be network-unique.
+  //
+  // System parameters:
+  // - **AuditFee** \
+  //   Fee paid by the storage group owner to the Inner Ring member.
+  //   Value: little-endian integer. Default: 0.
+  // - **BasicIncomeRate** \
+  //   Cost of storing one gigabyte of data for a period of one epoch. Paid by
+  //   container owner to container nodes.
+  //   Value: little-endian integer. Default: 0.
+  // - **ContainerAliasFee** \
+  //   Fee paid for named container's creation by the container owner.
+  //   Value: little-endian integer. Default: 0.
+  // - **ContainerFee** \
+  //   Fee paid for container creation by the container owner.
+  //   Value: little-endian integer. Default: 0.
+  // - **EigenTrustAlpha** \
+  //   Alpha parameter of EigenTrust algorithm used in the Reputation system.
+  //   Value: decimal floating-point number in UTF-8 string representation.
+  //   Default: 0.
+  // - **EigenTrustIterations** \
+  //   Number of EigenTrust algorithm iterations to pass in the Reputation system.
+  //   Value: little-endian integer. Default: 0.
+  // - **EpochDuration** \
+  //   NeoFS epoch duration measured in seconds.
+  //   Value: little-endian integer. Default: 0.
+  // - **HomomorphicHashingDisabled** \
+  //   Flag of disabling the homomorphic hashing of objects' payload.
+  //   Value: true if any byte != 0. Default: false.
+  // - **InnerRingCandidateFee** \
+  //   Fee for entrance to the Inner Ring paid by the candidate.
+  //   Value: little-endian integer. Default: 0.
+  // - **MaintenanceModeAllowed** \
+  //   Flag allowing setting the MAINTENANCE state to storage nodes.
+  //   Value: true if any byte != 0. Default: false.
+  // - **MaxObjectSize** \
+  //   Maximum size of physically stored NeoFS object measured in bytes.
+  //   Value: little-endian integer. Default: 0.
+  // - **WithdrawFee** \
+  //   Fee paid for withdrawal of funds paid by the account owner.
+  //   Value: little-endian integer. Default: 0.
+  message Parameter {
+    // Parameter key. UTF-8 encoded string (with no zero bytes).
+    bytes key = 1 [json_name = "key"];
+
+    // Parameter value
+    bytes value = 2 [json_name = "value"];
+  }
+  // List of parameter values
+  repeated Parameter parameters = 1 [json_name = "parameters"];
+}
+
+// Information about NeoFS network
+message NetworkInfo {
+  // Number of the current epoch in the NeoFS network
+  uint64 current_epoch = 1 [json_name = "currentEpoch"];
+
+  // Magic number of FS chain of the NeoFS network
+  uint64 magic_number = 2 [json_name = "magicNumber"];
+
+  // MillisecondsPerBlock network parameter of FS chain of the NeoFS network
+  int64 ms_per_block = 3 [json_name = "msPerBlock"];
+
+  // NeoFS network configuration
+  NetworkConfig network_config = 4 [json_name = "networkConfig"];
+}

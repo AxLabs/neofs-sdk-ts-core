@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package test.basic;
+
+option go_package = "github.com/test/basic";
+
+// Basic types test with repeated and map fields
+message BasicMessage {
+  // Basic types
+  string name = 1;
+  int32 age = 2;
+  int64 timestamp = 3;
+  uint32 count = 4;
+  uint64 big_count = 5;
+  float score = 6;
+  double precision = 7;
+  bool active = 8;
+  bytes data = 9;
+  
+  // Repeated fields
+  repeated string tags = 10;
+  repeated int32 numbers = 11;
+  
+  // Map fields
+  map<string, string> metadata = 12;
+  map<int32, string> number_map = 13;
+  
+  // Nested message
+  User user = 14;
+  
+  // Enum field
+  Status status = 15;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+}
+
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_ACTIVE = 1;
+  STATUS_INACTIVE = 2;
+}

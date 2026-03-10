@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package test.service;
+
+import "simple.proto";
+import "nested.proto";
+
+option go_package = "github.com/test/service";
+
+// Service with various method types
+service TestService {
+  // Simple unary call
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  
+  // Call with nested message
+  rpc CreateContainer(CreateContainerRequest) returns (CreateContainerResponse);
+  
+  // Call with external message reference
+  rpc ProcessMessage(test.simple.SimpleMessage) returns (test.simple.SimpleMessage);
+}
+
+// Request/Response messages
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserResponse {
+  test.simple.User user = 1;
+  bool success = 2;
+}
+
+message CreateContainerRequest {
+  test.nested.Container container = 1;
+  string description = 2;
+}
+
+message CreateContainerResponse {
+  string container_id = 1;
+  test.simple.Status status = 2;
+}

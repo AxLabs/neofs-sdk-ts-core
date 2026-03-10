@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package test.nested;
+
+option go_package = "github.com/test/nested";
+
+// Message with nested message
+message OuterMessage {
+  string outer_field = 1;
+  
+  message InnerMessage {
+    string inner_field = 1;
+    int32 inner_number = 2;
+  }
+  
+  InnerMessage inner = 2;
+}
+
+// Message with nested enum
+message Container {
+  string name = 1;
+  
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    TYPE_SMALL = 1;
+    TYPE_LARGE = 2;
+  }
+  
+  Type type = 2;
+}
+
+// Message with multiple nested messages
+message ComplexMessage {
+  string id = 1;
+  
+  message Header {
+    string version = 1;
+    int64 timestamp = 2;
+  }
+  
+  message Body {
+    string content = 1;
+    repeated string tags = 2;
+  }
+  
+  Header header = 2;
+  Body body = 3;
+}

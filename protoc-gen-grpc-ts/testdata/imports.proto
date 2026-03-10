@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package test.imports;
+
+import "simple.proto";
+import "nested.proto";
+
+option go_package = "github.com/test/imports";
+
+// Message that imports from other packages
+message ImportedMessage {
+  test.simple.SimpleMessage simple = 1;
+  test.nested.OuterMessage outer = 2;
+  test.simple.Status status = 3;
+}
+
+// Message with repeated fields
+message ListMessage {
+  repeated string items = 1;
+  repeated test.simple.User users = 2;
+  repeated int32 numbers = 3;
+}
+
+// Message with repeated fields (removed optional for proto3 compatibility)
+message OptionalMessage {
+  string name = 1;
+  int32 count = 2;
+  test.simple.Status status = 3;
+}

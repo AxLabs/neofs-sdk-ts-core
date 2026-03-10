@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package neo.fs.v2.container;
+
+import "netmap/types.proto";
+import "refs/types.proto";
+
+option csharp_namespace = "Neo.FileStorage.API.Container";
+option go_package = "github.com/nspcc-dev/neofs-sdk-go/proto/container";
+
+// Container is a structure that defines object placement behaviour. Objects can
+// be stored only within containers. They define placement rule, attributes and
+// access control information. An ID of a container is a 32 byte long SHA256 hash
+// of stable-marshalled container message.
+message Container {
+  // Container format version. Effectively, the version of API library used to
+  // create the container.
+  neo.fs.v2.refs.Version version = 1 [json_name = "version"];
+
+  // Identifier of the container owner
+  neo.fs.v2.refs.OwnerID owner_id = 2 [json_name = "ownerID"];
+
+  // Nonce is a 16 byte UUIDv4, used to avoid collisions of `ContainerID`s
+  bytes nonce = 3 [json_name = "nonce"];
+
+  // `BasicACL` contains access control rules for the owner, system and others groups,
+  // as well as permission bits for `BearerToken` and `Extended ACL`
+  uint32 basic_acl = 4 [json_name = "basicACL"];
+
+  // `Attribute` is a user-defined Key-Value metadata pair attached to the
+  // container. Container attributes are immutable. They are set at the moment of
+  // container creation and can never be added or updated.
+  //
+  // Key name must be a container-unique valid UTF-8 string. Value can't be
+  // empty. Containers with duplicated attribute names or attributes with empty
+  // values will be considered invalid. Zero byte is also forbidden in UTF-8
+  // strings.
+  //
+  // There are some "well-known" attributes affecting system behaviour:
+  //
+  // * __NEOFS__SUBNET \
+  //   DEPRECATED. Was used for a string ID of a container's storage subnet.
+  //   Currently doesn't affect anything.
+  // * __NEOFS__NAME \
+  //   String of a human-friendly container name registered as a domain in
+  //   NNS contract.
+  // * __NEOFS__ZONE \
+  //   String of a zone for `__NEOFS__NAME`. Used as a TLD of a domain name in NNS
+  //   contract. If no zone is specified, use default zone: `container`.
+  // * __NEOFS__DISABLE_HOMOMORPHIC_HASHING \
+  //   Disables homomorphic hashing for the container if the value equals "true" string.
+  //   Any other values are interpreted as missing attribute. Container could be
+  //   accepted in a NeoFS network only if the global network hashing configuration
+  //   value corresponds with that attribute's value. After container inclusion, network
+  //   setting is ignored.
+  // * __NEOFS__METAINFO_CONSISTENCY \
+  //   Policy rule that defines the condition under which an object is considered
+  //   processed. Acceptable values and meanings:
+  //     1. "strict": SN processes objects' meta information, it is validated,
+  //       indexed and signed accordingly by a required minimal number of nodes
+  //       that are included in the container, a corresponding object inclusion
+  //       notification can be caught
+  //     2. "optimistic": the same as "strict" but a successful PUT operation
+  //       does not mean objects' meta information has been multi signed and
+  //       indexed correctly, however, SNs will try to do it asynchronously;
+  //       in general PUT operations are expected to be faster than in the
+  //       "strict" case
+  //     3. <other cases>: SN does not process objects' meta
+  //       information, it is not indexed and object presence/number of copies
+  //       is not proven after a successful object PUT operation; the behavior
+  //       is the same as it was before this attribute introduction
+  //
+  // And some well-known attributes used by applications only:
+  //
+  // * Name \
+  //   Human-friendly name
+  // * Timestamp \
+  //   User-defined local time of container creation in Unix Timestamp format
+  message Attribute {
+    // Attribute name key
+    string key = 1 [json_name = "key"];
+
+    // Attribute value
+    string value = 2 [json_name = "value"];
+  }
+  // Attributes represent immutable container's meta data
+  repeated Attribute attributes = 5 [json_name = "attributes"];
+
+  // Placement policy for the object inside the container
+  neo.fs.v2.netmap.PlacementPolicy placement_policy = 6 [json_name = "placementPolicy"];
+}

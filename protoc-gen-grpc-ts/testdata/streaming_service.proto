@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package test.streaming;
+
+option go_package = "github.com/test/streaming";
+
+// Service with streaming methods
+service StreamingService {
+  // Server streaming call
+  rpc GetData(GetDataRequest) returns (stream GetDataResponse);
+  
+  // Client streaming call
+  rpc UploadData(stream UploadDataRequest) returns (UploadDataResponse);
+  
+  // Bidirectional streaming call
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+  
+  // Regular unary call
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
+}
+
+// Server streaming messages
+message GetDataRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message GetDataResponse {
+  string data = 1;
+  bool has_more = 2;
+}
+
+// Client streaming messages
+message UploadDataRequest {
+  string filename = 1;
+  bytes chunk = 2;
+  bool is_last = 3;
+}
+
+message UploadDataResponse {
+  string file_id = 1;
+  int64 total_size = 2;
+  bool success = 3;
+}
+
+// Bidirectional streaming messages
+message ChatMessage {
+  string user_id = 1;
+  string message = 2;
+  int64 timestamp = 3;
+}
+
+// Unary messages
+message GetStatusRequest {
+  string service = 1;
+}
+
+message GetStatusResponse {
+  string status = 1;
+  int32 uptime = 2;
+}

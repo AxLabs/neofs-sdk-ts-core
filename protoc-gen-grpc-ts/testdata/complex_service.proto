@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package test.complex;
+
+import "edge_cases.proto";
+
+option go_package = "github.com/test/complex";
+
+// Complex service with various method patterns
+service ComplexService {
+  // Simple unary call
+  rpc SimpleCall(SimpleRequest) returns (SimpleResponse);
+  
+  // Call with complex types
+  rpc ComplexCall(ComplexRequest) returns (ComplexResponse);
+  
+  // Call with edge case types
+  rpc EdgeCaseCall(test.edge.AllTypes) returns (test.edge.AllTypes);
+  
+  // Call with nested types
+  rpc NestedCall(test.edge.DeepNesting) returns (test.edge.DeepNesting);
+}
+
+// Request/Response messages
+message SimpleRequest {
+  string id = 1;
+}
+
+message SimpleResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ComplexRequest {
+  test.edge.AllTypes data = 1;
+  repeated string tags = 2;
+  map<string, string> metadata = 3;
+}
+
+message ComplexResponse {
+  test.edge.AllTypes result = 1;
+  repeated string errors = 2;
+  map<string, int32> counts = 3;
+}

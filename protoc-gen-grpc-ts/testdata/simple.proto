@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package test.simple;
+
+option go_package = "github.com/test/simple";
+
+// Simple message with basic types
+message SimpleMessage {
+  string name = 1;
+  int32 age = 2;
+  bool active = 3;
+  double score = 4;
+  bytes data = 5;
+}
+
+// Simple enum
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_ACTIVE = 1;
+  STATUS_INACTIVE = 2;
+}
+
+// Message with enum field
+message User {
+  string id = 1;
+  Status status = 2;
+  SimpleMessage profile = 3;
+}
