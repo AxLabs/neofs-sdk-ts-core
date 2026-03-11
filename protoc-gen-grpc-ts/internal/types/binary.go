@@ -13,7 +13,8 @@ func GenerateBinaryClasses(g *protogen.GeneratedFile) {
 	g.P()
 	g.P("  private ensureCapacity(needed: number): void {")
 	g.P("    if (this.position + needed > this.buffer.length) {")
-	g.P("      const newBuffer = new Uint8Array(this.buffer.length * 2);")
+        g.P("      const minSize = this.position + needed");
+        g.P("      const newBuffer = new Uint8Array(Math.max(this.buffer.length * 2, minSize))");
 	g.P("      newBuffer.set(this.buffer);")
 	g.P("      this.buffer = newBuffer;")
 	g.P("    }")
