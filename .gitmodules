@@ -1,3 +1,0 @@
-[submodule "neofs-api"]
-	path = neofs-api
-	url = https://github.com/nspcc-dev/neofs-api.git

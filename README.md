@@ -117,14 +117,6 @@ make test
 
 See [`protoc-gen-grpc-ts/README.md`](protoc-gen-grpc-ts/README.md) for full usage documentation.
 
-## Git Submodules
-
-The NeoFS API proto definitions are included as a git submodule. After cloning, initialize it with:
-
-```bash
-git submodule update --init --recursive
-```
-
 ## License
 
 [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)
