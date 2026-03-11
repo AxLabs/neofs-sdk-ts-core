@@ -43,13 +43,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nspcc-dev/neofs-sdk-ts.git",
+    "url": "https://github.com/AxLabs/neofs-sdk-ts-core.git",
     "directory": "neofs-sdk-ts-core"
   },
   "bugs": {
-    "url": "https://github.com/nspcc-dev/neofs-sdk-ts/issues"
+    "url": "https://github.com/AxLabs/neofs-sdk-ts-core/issues"
   },
-  "homepage": "https://github.com/nspcc-dev/neofs-sdk-ts#readme",
+  "homepage": "https://github.com/AxLabs/neofs-sdk-ts-core#readme",
   "keywords": [
     "neofs",
     "blockchain",
