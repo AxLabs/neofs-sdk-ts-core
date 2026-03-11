@@ -37,7 +37,9 @@
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
     "prepublishOnly": "npm run build",
-    "test": "echo 'No tests in core package'"
+    "test": "echo 'No tests in core package'",
+    "publish:dry-run": "npm publish --dry-run",
+    "publish:public": "npm publish --access public"
   },
   "repository": {
     "type": "git",
