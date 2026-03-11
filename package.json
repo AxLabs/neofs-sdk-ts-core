@@ -1,6 +1,6 @@
 {
   "name": "neofs-sdk-ts-core",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Shared core code for NeoFS TypeScript SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
