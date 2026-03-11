@@ -1,5 +1,5 @@
 {
-  "name": "neofs-sdk-ts-core",
+  "name": "@axlabs/neofs-sdk-ts-core",
   "version": "0.0.1",
   "description": "Shared core code for NeoFS TypeScript SDK",
   "main": "dist/index.js",
