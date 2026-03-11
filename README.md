@@ -2,8 +2,6 @@
 
 Shared core package for the [NeoFS](https://fs.neo.org/) TypeScript SDK. Provides cryptographic primitives, user identity utilities, type definitions, and helper functions used by platform-specific SDK packages.
 
-This package is part of the [nspcc-dev/neofs-sdk-ts](https://github.com/nspcc-dev/neofs-sdk-ts) monorepo and is designed to be consumed by:
-
 - **neofs-sdk-ts-react-native** — uses `grpc-react-native` with custom protobuf serialization
 - **neofs-sdk-ts-node** — uses `@grpc/grpc-js` with standard protobuf
 
