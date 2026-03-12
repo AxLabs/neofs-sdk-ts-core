@@ -1,5 +1,6 @@
 import { sha256, sha512 } from '../../utils/crypto';
 import { randomBytes } from '../../utils/buffer';
+import { base58Decode } from '../../utils/base58';
 import { ec as EC } from 'elliptic';
 import { Scheme, PublicKey } from '../scheme';
 import { Signer } from '../signer';
@@ -49,8 +50,7 @@ export class ECDSASigner implements Signer {
   static decodeWIF(wif: string): Uint8Array {
     if (!wif) throw new Error('WIF cannot be null');
     
-    // Decode Base58
-    const data = this.base58Decode(wif);
+    const data = base58Decode(wif);
     
     // Neo WIF format: 0x80 + 32 bytes private key + checksum
     if (data.length < 33 || data[0] !== 0x80) {
@@ -62,38 +62,6 @@ export class ECDSASigner implements Signer {
     privateKey.set(data.slice(1, 33));
     
     return privateKey;
-  }
-
-  /**
-   * Base58 decoding implementation.
-   */
-  private static base58Decode(encoded: string): Uint8Array {
-    const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-    let value = 0n;
-    
-    // Decode Base58 string to BigInteger
-    for (let i = 0; i < encoded.length; i++) {
-      const digit = alphabet.indexOf(encoded[i]);
-      if (digit < 0) {
-        throw new Error(`Invalid Base58 character '${encoded[i]}' at position ${i}`);
-      }
-      value = value * 58n + BigInt(digit);
-    }
-    
-    // Convert BigInteger to byte array
-    const leadingZeros = encoded.match(/^1+/)?.[0].length || 0;
-    const bytes = [];
-    
-    while (value > 0n) {
-      bytes.unshift(Number(value & 0xFFn));
-      value = value >> 8n;
-    }
-    
-    // Add leading zeros
-    const result = new Uint8Array(leadingZeros + bytes.length);
-    result.set(bytes, leadingZeros);
-    
-    return result;
   }
 
   /**
