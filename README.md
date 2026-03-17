@@ -8,7 +8,7 @@ Shared core package for the [NeoFS](https://fs.neo.org/) TypeScript SDK. Provide
 ## Installation
 
 ```bash
-npm install neofs-sdk-ts-core
+npm install @axlabs/neofs-sdk-ts-core
 ```
 
 ## Modules
