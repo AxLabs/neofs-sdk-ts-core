@@ -150,7 +150,9 @@ func GenerateMethod(g *protogen.GeneratedFile, method *protogen.Method, service 
 
 // GetFullMethodName returns the full gRPC method name
 func GetFullMethodName(service *protogen.Service, method *protogen.Method) string {
-	return string(service.Desc.FullName()) + "/" + string(method.Desc.Name())
+	// gRPC method path must be absolute (leading slash), e.g.:
+	//   /neo.fs.v2.object.ObjectService/SearchV2
+	return "/" + string(service.Desc.FullName()) + "/" + string(method.Desc.Name())
 }
 
 // GetPackageName extracts the package name from a proto file
